@@ -44,47 +44,56 @@ git --version
 5. Создайте репозиторий и скопируйте URL вида
    `https://github.com/ВАШ_ЛОГИН/tz-checker.git`.
 
-## 3. Инициализировать и запушить
+## 3. Репозиторий уже подготовлен
 
-Откройте PowerShell в папке проекта:
+Локальный git-репозиторий уже создан, ветка `main`, первый коммит:
+
+```text
+ed622c3 TZ Checker 0.3.0: semantic search, background checks, Docker deploy
+```
+
+В индекс попали только 47 файлов: код, тесты, примеры и документация.
+`data/`, `.venv/`, `РЕЕСТР СТО/`, PDF, логи и ключи не добавлены — это
+проверено через `git status` и `git ls-files`.
+
+### Вариант A — GitHub Desktop (проще всего)
+
+На компьютере уже установлен GitHub Desktop (в нём же есть Git):
+
+1. Откройте **GitHub Desktop**.
+2. **File → Add Local Repository**.
+3. Укажите папку `C:\Users\kuprikovva\Desktop\РАЗРАБОТКА\ТЗ проверка ИИ`.
+4. Нажмите **Publish repository**.
+5. Имя: `tz-checker`, поставьте галочку **Keep this code private**.
+6. **Publish repository**.
+
+GitHub Desktop создаст репозиторий и запушит коммит. Дальше откройте
+**Actions** на GitHub — тесты запустятся автоматически.
+
+### Вариант B — командная строка
+
+Если Git доступен в PATH (или используйте Git из GitHub Desktop):
 
 ```powershell
 cd "C:\Users\kuprikovva\Desktop\РАЗРАБОТКА\ТЗ проверка ИИ"
 
-git init
-git add .
-git status --short
-```
-
-**Проверьте вывод `git status`.** В нём не должно быть:
-
-```text
-.venv/
-data/
-РЕЕСТР СТО/
-*.pdf
-data/settings.json
-data/tz_checker.sqlite3
-```
-
-Если что-то из этого попало в индекс, уберите:
-
-```powershell
-git rm -r --cached .venv data "РЕЕСТР СТО"
-```
-
-Только после проверки:
-
-```powershell
-git commit -m "TZ Checker 0.3.0: семантический поиск, фоновые проверки, деплой"
-git branch -M main
 git remote add origin https://github.com/ВАШ_ЛОГИН/tz-checker.git
 git push -u origin main
 ```
 
-При первом push Git попросит авторизацию. Используйте GitHub Desktop либо
-Personal Access Token (classic, scope `repo`) как пароль. **Не отправляйте
-токен в чат и не коммитьте его в файлы.**
+При первом push Git попросит авторизацию через GitHub Credential Manager
+или Personal Access Token (classic, scope `repo`). **Не отправляйте токен
+в чат и не коммитьте его в файлы.**
+
+Проверить состояние перед push:
+
+```powershell
+git status
+git log --oneline -1
+git ls-files | Select-String -Pattern "\.venv/|^data/|РЕЕСТР|\.pdf$|settings\.json"
+```
+
+Последняя команда не должна находить ничего, кроме `data/README.txt`.
 
 ## 4. Что произойдёт после push
 
