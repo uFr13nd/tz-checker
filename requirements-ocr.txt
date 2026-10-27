@@ -1,0 +1,5 @@
+# OCR для сканированных PDF (опционально).
+# Дополнительно требуется установленный Tesseract с языковыми моделями rus+eng.
+-r requirements.txt
+pytesseract>=0.3.10
+Pillow>=10.0

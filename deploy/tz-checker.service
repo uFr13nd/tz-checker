@@ -1,0 +1,23 @@
+[Unit]
+Description=TZ Checker
+After=network.target
+
+[Service]
+Type=simple
+User=tzchecker
+Group=tzchecker
+WorkingDirectory=/opt/tz-checker
+EnvironmentFile=/etc/tz-checker.env
+ExecStart=/opt/tz-checker/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --proxy-headers
+Restart=always
+RestartSec=5
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/tz-checker
+StateDirectory=tz-checker
+
+[Install]
+WantedBy=multi-user.target

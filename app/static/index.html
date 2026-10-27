@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0C447C">
+<title>TZ Checker — проверка ТЗ по СТО</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/app.css">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+<div class="layout">
+  <aside>
+    <div class="brand">
+      <div class="mark">TZ</div>
+      <div>
+        <div class="brand-title">Проверка ТЗ</div>
+        <div class="brand-sub">Семантический аудит · <span id="app-version">0.3.0</span></div>
+      </div>
+    </div>
+    <div class="nav-label">РАБОЧЕЕ ПРОСТРАНСТВО</div>
+    <nav>
+      <button class="nav-btn active" data-page="check">Проверить ТЗ</button>
+      <button class="nav-btn" data-page="library">Библиотека СТО</button>
+      <button class="nav-btn" data-page="history">История проверок</button>
+      <button class="nav-btn" data-page="settings">Настройки ИИ</button>
+      <button class="nav-btn" data-page="help">Инструкция</button>
+    </nav>
+    <div class="aside-note">
+      Файлы обрабатываются на сервере приложения. Извлечённый текст отправляется выбранному
+      API-провайдеру. Используйте только документы, разрешённые к передаче этому провайдеру.
+    </div>
+  </aside>
+
+  <main>
+    <header>
+      <div>
+        <div class="h-title" id="page-title">Проверить требования ТЗ</div>
+        <div class="h-sub">Гибридный поиск по СТО, проверяемые цитаты и инженерная оценка</div>
+      </div>
+      <div class="top-right">
+        <span class="local-pill" id="server-pill">● Локальный сервер</span>
+        <button class="btn" id="header-settings">Настройки ИИ</button>
+      </div>
+    </header>
+
+    <div class="content">
+      <div id="server-warning" class="server-warning hidden"></div>
+      <!-- Проверка -->
+      <section class="page active" id="page-check">
+        <div class="page-head">
+          <div>
+            <h2>Новая проверка</h2>
+            <div class="muted">Сопоставление по всей библиотеке СТО: FTS + стемы + синонимы + эмбеддинги. Проверка идёт в фоне, прогресс виден на странице.</div>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="card">
+            <h3>1. Проверяемое техническое задание</h3>
+            <div class="field">
+              <label for="tz-file">Файл ТЗ (PDF, DOCX, XLSX, MD, TXT)</label>
+              <div class="filebox">
+                <input id="tz-file" type="file" accept=".pdf,.docx,.xlsx,.md,.txt,.csv">
+                <div class="file-list" id="tz-file-name">Файл не выбран</div>
+              </div>
+            </div>
+            <div class="field">
+              <label for="tz-url">Или публичная ссылка Google Drive / Docs</label>
+              <input id="tz-url" type="url" placeholder="https://docs.google.com/document/d/...">
+              <div class="small">Закрытые ссылки не скачиваются. Для конфиденциальных документов используйте загрузку файла.</div>
+            </div>
+            <div class="field">
+              <label for="run-title">Название проверки</label>
+              <input id="run-title" placeholder="Например: ЖК, ТЗ ЭП, редакция 03">
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>2. Дополнительные СТО (необязательно)</h3>
+            <div class="muted">Файлы и ссылки добавляются в постоянную библиотеку. Для поиска по ранее импортированным СТО оставьте поля пустыми.</div>
+            <div class="field">
+              <label for="std-files">Файлы СТО</label>
+              <div class="filebox">
+                <input id="std-files" type="file" multiple accept=".pdf,.docx,.xlsx,.md,.txt,.csv">
+                <div class="file-list" id="std-file-names">Файлы не выбраны</div>
+              </div>
+            </div>
+            <div class="field">
+              <label for="std-urls">Или ссылки на публичные документы Google Drive</label>
+              <textarea id="std-urls" placeholder="По одной ссылке на строку"></textarea>
+            </div>
+            <div class="field">
+              <label for="standard-scope">Ограничить проверку выбранными СТО</label>
+              <select id="standard-scope" multiple size="4"></select>
+              <div class="small">Ничего не выбрано — вся библиотека. Удерживайте Ctrl/Cmd для нескольких документов.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:14px">
+          <div class="toolbar spread" style="margin-top:0">
+            <h3 style="margin:0">3. Контекст и задача анализа</h3>
+            <div class="toolbar" style="margin:0">
+              <select id="template-select" style="border:1px solid #CBD8E6;border-radius:9px;padding:7px 9px;font-size:11px">
+                <option value="">Шаблоны контекста…</option>
+              </select>
+              <button class="btn small" id="template-load">Применить</button>
+              <input id="template-name" placeholder="Название шаблона" style="border:1px solid #CBD8E6;border-radius:9px;padding:7px 9px;font-size:11px;width:170px">
+              <button class="btn small" id="template-save">Сохранить как шаблон</button>
+              <button class="btn small danger" id="template-delete">Удалить</button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="project-context">Контекст проекта и условия применимости</label>
+            <textarea id="project-context" placeholder="Тип объекта, стадия проектирования, высота, класс, конструктивные особенности, состав помещений, исключения..."></textarea>
+          </div>
+          <div class="field">
+            <label for="analysis-instructions">Специальные инструкции для ИИ</label>
+            <textarea id="analysis-instructions" placeholder="Например: проверить только вентиляцию и противодымную защиту; отдельно оценить размеры шахт и коллизии между СТО."></textarea>
+            <div class="small">Инструкции уточняют фокус, но не отменяют требования к доказательствам и запрет на выдумывание источников.</div>
+          </div>
+          <div class="field">
+            <label for="analysis-mode">Глубина проверки</label>
+            <select id="analysis-mode">
+              <option value="quick">Быстрая — до 60 фрагментов ТЗ</option>
+              <option value="extended">Расширенная — до 150 фрагментов</option>
+              <option value="full">Полная — все фрагменты ТЗ</option>
+            </select>
+            <div class="small">Число пакетов, оценка токенов и стоимости показываются ниже до запуска.</div>
+          </div>
+          <div id="estimate-box" class="estimate">Загрузите ТЗ, чтобы увидеть оценку объёма и стоимости проверки.</div>
+        </div>
+
+        <div class="toolbar">
+          <button class="btn primary" id="run-check">Проверить требования ТЗ</button>
+          <button class="btn" id="clear-form">Очистить</button>
+        </div>
+        <div id="check-message" class="notice hidden"></div>
+
+        <div id="progress-panel" class="card hidden">
+          <div class="progress">
+            <div class="progress-head">
+              <b id="progress-text">Подготовка…</b>
+              <span id="progress-percent">0%</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+            <div class="progress-meta" id="progress-meta"></div>
+          </div>
+          <div class="toolbar" style="margin-bottom:0">
+            <button class="btn" id="cancel-run">Остановить проверку</button>
+          </div>
+        </div>
+
+        <div class="results" id="results-section">
+          <div class="page-head" style="margin-top:22px">
+            <div>
+              <h2>Результаты</h2>
+              <div class="muted">Каждый вывод должен содержать фрагмент ТЗ и СТО. Неподтверждённые цитаты автоматически переводятся на экспертную проверку.</div>
+            </div>
+          </div>
+          <div class="legend">
+            <span class="badge green">Соответствует</span>
+            <span class="badge red">Несоответствие</span>
+            <span class="badge yellow">Экспертная оценка</span>
+            <span class="badge gray">Не применимо</span>
+          </div>
+          <div id="result-metrics" class="metrics hidden"></div>
+          <div class="filters hidden" id="results-filters">
+            <div id="status-filters" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+            <select id="category-filter"><option value="">Все категории</option></select>
+            <input id="results-search" type="search" placeholder="Поиск по цитатам и параметрам">
+          </div>
+          <div id="results" class="empty">Проверка ещё не запускалась.</div>
+          <div id="export-buttons" class="toolbar hidden">
+            <button class="btn primary" id="save-sheets" disabled>Сохранить в Google Sheets</button>
+            <button class="btn" id="export-xlsx">Скачать Excel</button>
+            <button class="btn" id="export-json">Скачать JSON</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Библиотека -->
+      <section class="page" id="page-library">
+        <div class="page-head">
+          <div>
+            <h2>Библиотека корпоративных СТО</h2>
+            <div class="muted">Документы индексируются локально. При проверке ищутся только релевантные положения по всей библиотеке.</div>
+          </div>
+          <button class="btn" id="refresh-library">Обновить библиотеку</button>
+        </div>
+        <div class="metrics" id="library-metrics">
+          <div class="metric"><div class="metric-label">Документов</div><div class="metric-value" id="lib-doc-count">0</div></div>
+          <div class="metric"><div class="metric-label">ACTIVE</div><div class="metric-value" id="lib-active-count">0</div></div>
+          <div class="metric"><div class="metric-label">Фрагментов в индексе</div><div class="metric-value" id="lib-chunk-count">0</div></div>
+          <div class="metric"><div class="metric-label">Символов текста</div><div class="metric-value" id="lib-char-count">0</div></div>
+        </div>
+        <div class="grid">
+          <div class="card">
+            <h3>Добавить файлы СТО</h3>
+            <div class="field">
+              <label for="library-files">Любое количество файлов</label>
+              <div class="filebox">
+                <input id="library-files" type="file" multiple accept=".pdf,.docx,.xlsx,.md,.txt,.csv">
+                <div class="file-list" id="library-file-names">Файлы не выбраны</div>
+              </div>
+            </div>
+            <div class="small">Дубликаты по контрольной сумме не добавляются повторно.</div>
+          </div>
+          <div class="card">
+            <h3>Добавить ссылки на документы</h3>
+            <div class="field">
+              <label for="library-urls">Публичные ссылки Google Drive / Docs</label>
+              <textarea id="library-urls" placeholder="https://docs.google.com/document/d/..." style="min-height:120px"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="toolbar">
+          <button class="btn primary" id="import-library">Импортировать в библиотеку</button>
+          <button class="btn" id="refresh-library-2">Обновить список</button>
+        </div>
+        <div id="library-message" class="notice hidden"></div>
+        <div class="notice">
+          Новый документ получает статус «Требует проверки». После сверки редакции и области применения
+          переведите его в ACTIVE — иначе выводы по нему останутся жёлтыми. Для массового перевода
+          отметьте документы и используйте панель ниже.
+        </div>
+        <div class="bulkbar">
+          <label class="checkline"><input type="checkbox" id="select-all"> Выбрать все</label>
+          <select id="bulk-status">
+            <option value="">Статус…</option>
+            <option value="ACTIVE">ACTIVE — утверждён</option>
+            <option value="PENDING_REVIEW">Требует проверки</option>
+            <option value="DRAFT">Черновик</option>
+            <option value="RETIRED">Утратил действие</option>
+          </select>
+          <input id="bulk-revision" placeholder="Редакция / дата">
+          <input id="bulk-applicability" placeholder="Область применения">
+          <button class="btn primary" id="bulk-apply">Применить к выбранным</button>
+          <button class="btn danger" id="bulk-delete">Удалить выбранные</button>
+          <div class="spacer"></div>
+          <input id="library-search" type="search" placeholder="Поиск по названию, ID, статусу…">
+        </div>
+        <div id="library-table" class="empty">Загрузка библиотеки…</div>
+      </section>
+
+      <!-- История -->
+      <section class="page" id="page-history">
+        <div class="page-head">
+          <div>
+            <h2>История проверок</h2>
+            <div class="muted">Запуски и результаты хранятся в локальной базе. Можно сравнить две редакции ТЗ.</div>
+          </div>
+          <button class="btn" id="refresh-history">Обновить</button>
+        </div>
+        <div class="card">
+          <h3>Сравнение прогонов</h3>
+          <div class="toolbar" style="margin-top:0">
+            <select id="compare-base" style="min-width:260px"><option value="">Базовый (старый) прогон…</option></select>
+            <select id="compare-other" style="min-width:260px"><option value="">Новый прогон…</option></select>
+            <button class="btn primary" id="compare-btn">Сравнить</button>
+          </div>
+          <div id="compare-result"></div>
+        </div>
+        <div id="history-table" class="empty" style="margin-top:14px">Загрузка истории…</div>
+        <div id="history-detail" style="margin-top:18px"></div>
+      </section>
+
+      <!-- Настройки -->
+      <section class="page" id="page-settings">
+        <div class="page-head">
+          <div>
+            <h2>Настройки ИИ-провайдера</h2>
+            <div class="muted">Ключ хранится локально и шифруется средствами Windows (DPAPI), если это возможно.</div>
+          </div>
+        </div>
+        <div class="grid">
+          <div class="card">
+            <h3>Провайдер</h3>
+            <div class="field">
+              <label for="api-base">Base URL API</label>
+              <input id="api-base" placeholder="https://api.openai.com/v1">
+              <div class="small">Для локальной Ollama: <b>http://127.0.0.1:11434/v1</b> (не /api/chat), ключ не нужен. Для Ollama Cloud: https://ollama.com/v1 + ключ.</div>
+            </div>
+            <div class="field">
+              <label for="api-model">Название модели</label>
+              <input id="api-model" placeholder="gpt-4.1-mini">
+            </div>
+            <div class="field">
+              <label for="api-key">API key <span id="key-state" class="key-state"></span></label>
+              <input id="api-key" type="password" autocomplete="new-password" placeholder="Вставьте новый ключ; пустое поле сохранит текущий">
+              <label class="checkline" style="margin-top:8px"><input type="checkbox" id="clear-key"> Удалить сохранённый ключ</label>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="concurrency">Параллельных запросов</label>
+                <input id="concurrency" type="number" min="1" max="8" value="3">
+              </div>
+              <div class="field">
+                <label for="price-input">Цена входных, $/1M</label>
+                <input id="price-input" type="number" min="0" step="0.01" value="0">
+              </div>
+              <div class="field">
+                <label for="price-output">Цена выходных, $/1M</label>
+                <input id="price-output" type="number" min="0" step="0.01" value="0">
+              </div>
+            </div>
+            <div class="toolbar">
+              <button class="btn primary" id="save-settings">Сохранить настройки</button>
+              <button class="btn" id="test-provider">Проверить подключение</button>
+            </div>
+            <div id="settings-message" class="statusline"></div>
+          </div>
+
+          <div class="card">
+            <h3>Семантический поиск</h3>
+            <label class="checkline">
+              <input type="checkbox" id="use-embeddings" checked>
+              Использовать эмбеддинги (провайдер или локальные)
+            </label>
+            <div class="field">
+              <label for="embedding-model">Модель эмбеддингов</label>
+              <input id="embedding-model" placeholder="nomic-embed-text">
+              <div class="small">Если провайдер не поддерживает /embeddings, автоматически включаются локальные хэш-эмбеддинги. Настраивать ничего не нужно.</div>
+            </div>
+            <div class="field">
+              <label for="embedding-base">Base URL для эмбеддингов (необязательно)</label>
+              <input id="embedding-base" placeholder="http://127.0.0.1:11434/v1">
+              <div class="small">Позволяет считать эмбеддинги на локальной Ollama, если чат работает в облаке. Пусто — используется основной Base URL.</div>
+            </div>
+            <div class="field">
+              <label for="embedding-key">API key эмбеддингов <span id="embedding-key-state" class="key-state"></span></label>
+              <input id="embedding-key" type="password" autocomplete="new-password" placeholder="Обычно не требуется">
+              <label class="checkline" style="margin-top:8px"><input type="checkbox" id="clear-embedding-key"> Удалить ключ эмбеддингов</label>
+            </div>
+            <hr style="border:0;border-top:1px solid #e4e7ec;margin:20px 0">
+            <h3>Google Sheets — сохранение реестров</h3>
+            <div class="field">
+              <label for="google-client">Google OAuth Client ID</label>
+              <input id="google-client" placeholder="...apps.googleusercontent.com">
+              <div class="small">Добавьте Authorized JavaScript origin, совпадающий с адресом приложения.</div>
+            </div>
+            <div class="field">
+              <label for="sheet-id">ID Google-таблицы</label>
+              <input id="sheet-id" placeholder="1Jj-...">
+            </div>
+            <div class="toolbar">
+              <button class="btn" id="connect-sheets">Подключить Google Sheets</button>
+            </div>
+            <div id="sheets-message" class="statusline"></div>
+            <hr style="border:0;border-top:1px solid #e4e7ec;margin:20px 0">
+            <h3>Токен доступа (для серверного развёртывания)</h3>
+            <div class="field">
+              <label for="auth-token">X-API-Token</label>
+              <input id="auth-token" type="password" placeholder="Токен задаётся на сервере в TZ_CHECKER_TOKEN">
+              <div class="small">Токен хранится только в sessionStorage этой вкладки и отправляется в заголовке X-API-Token.</div>
+            </div>
+            <button class="btn" id="save-token">Сохранить токен в сессии</button>
+            <div id="token-message" class="statusline"></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:14px">
+          <h3>Журнал приложения</h3>
+          <div class="muted">
+            Файл <code>data/tz-checker.log</code>, ротация 2 МБ × 3. Логируются запуск и остановка,
+            HTTP-запросы, прогоны, ошибки провайдера и предупреждения. Текст документов и ключи в журнал не попадают.
+          </div>
+          <div class="toolbar">
+            <button class="btn" id="show-log">Последние 200 строк</button>
+            <a class="btn" id="download-log" href="/api/logs/download">Скачать журнал</a>
+          </div>
+          <pre id="log-output" class="logbox hidden"></pre>
+        </div>
+      </section>
+
+      <!-- Инструкция -->
+      <section class="page" id="page-help">
+        <h2>Как пользоваться</h2>
+        <div class="card">
+          <ol class="muted">
+            <li>В «Настройках ИИ» укажите Base URL, модель и ключ. Сохраните и проверьте подключение.</li>
+            <li>Импортируйте СТО в «Библиотеке СТО» и переведите проверенные документы в ACTIVE.</li>
+            <li>На странице проверки загрузите ТЗ, заполните контекст (или примените шаблон).</li>
+            <li>Посмотрите оценку числа пакетов и стоимости, выберите глубину проверки.</li>
+            <li>Нажмите «Проверить требования ТЗ» — анализ идёт в фоне, прогресс отображается на странице.</li>
+            <li>Отфильтруйте результаты по статусу, категории или тексту, изучите цитаты и рекомендации.</li>
+            <li>Скачайте Excel (листы «Сводка», «Результаты», «Замечания») или JSON; при необходимости сохраните в Google Sheets.</li>
+            <li>В истории можно сравнить два прогона и увидеть, какие замечания появились, исчезли или изменили статус.</li>
+          </ol>
+          <div class="notice">
+            Сканированные PDF без текстового слоя требуют OCR: установите Tesseract и пакеты из
+            requirements-ocr.txt, затем включите TZ_CHECKER_OCR=1. Закрытые ссылки Google не обходятся.
+          </div>
+          <div class="muted">
+            Данные: <code>data/tz_checker.sqlite3</code> (история и библиотека), <code>data/settings.json</code>
+            (настройки, ключ зашифрован DPAPI на Windows), <code>data/tz-checker.log</code> (журнал).
+            Развёртывание на сервере описано в <code>DEPLOY.md</code>.
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+<script src="/app.js" defer></script>
+</body>
+</html>

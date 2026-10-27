@@ -1,0 +1,33 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+pytest-cache-files-*/
+.pytest_tmp/
+tests/_runtime/
+
+# Рабочие данные: настройки, ключи, история, журналы
+data/*.sqlite3
+data/*.sqlite3-wal
+data/*.sqlite3-shm
+data/*.json
+data/*.log
+data/*.tmp
+.env
+
+# Исходные корпоративные документы не публикуются
+РЕЕСТР СТО/
+*.pdf
+
+# Тестовые и временные артефакты
+_smoke*/
+dist/
+*.zip
+*.log
+Thumbs.db
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
