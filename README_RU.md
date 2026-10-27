@@ -155,6 +155,8 @@
   в репозиторий не попадают.
 - `GITHUB.md` — как безопасно создать репозиторий, что исключено через
   `.gitignore`, как работают GitHub Actions.
+- `TILDA.md` — как добавить TZ Checker карточкой в раздел «Внутренние сервисы»
+  на Tilda; готовый фрагмент — `deploy/tilda-card.html`.
 - `.github/workflows/tests.yml` — тесты на Ubuntu/Windows (Python 3.11/3.13)
   и сборка Docker-образа.
 
